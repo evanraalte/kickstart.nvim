@@ -152,6 +152,7 @@ vim.o.splitbelow = true
 vim.o.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 
+vim.opt.tabstop = 4
 -- Preview substitutions live, as you type!
 vim.o.inccommand = 'split'
 
@@ -168,7 +169,8 @@ vim.o.confirm = true
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
-
+vim.keymap.set('n', '<leader>ht', [[<cmd>split | term<cr>A]], { desc = 'Open terminal in horizontal split' })
+vim.keymap.set('n', '<leader>vt', [[<cmd>vsplit | term<cr>A]], { desc = 'Open terminal in vertical split' })
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
@@ -185,10 +187,10 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 -- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
+vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
+vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
+vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
+vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
@@ -428,8 +430,14 @@ require('lazy').setup({
       local builtin = require 'telescope.builtin'
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-      vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
+      vim.keymap.set('n', '<leader>sf', function()
+        builtin.find_files {
+          hidden = true,
+          no_ignore = false,
+          file_ignore_patterns = { '.git/' },
+        }
+      end, { desc = '[S]earch [F]iles' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
@@ -673,6 +681,23 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
+        -- basedpyright = {
+        --   settings = {
+        --     basedpyright = {
+        --       analysis = {
+        --         typeCheckingMode = 'basic',
+        --       },
+        --     },
+        --   },
+        -- },
+        ruff = {
+          init_options = {
+            settings = {
+              -- Any extra CLI arguments for `ruff` go here.
+              args = {},
+            },
+          },
+        },
         -- pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -692,6 +717,16 @@ require('lazy').setup({
             Lua = {
               completion = {
                 callSnippet = 'Replace',
+              },
+              diagnostics = {
+                globals = { 'vim', 'hs' },
+              },
+              workspace = {
+                library = {
+                  ['/Users/erik/.hammerspoon/Spoons/EmmyLua.spoon/annotations/'] = true,
+                  [vim.fn.expand '$VIMRUNTIME/lua'] = true,
+                  [vim.fn.stdpath 'config' .. '/lua'] = true,
+                },
               },
               -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
               -- diagnostics = { disable = { 'missing-fields' } },
@@ -769,7 +804,7 @@ require('lazy').setup({
       formatters_by_ft = {
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
+        python = { 'ruff' },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
@@ -969,15 +1004,125 @@ require('lazy').setup({
   -- place them in the correct locations.
 
   -- NOTE: Next step on your Neovim journey: Add/Configure additional plugins for Kickstart
-  --
+  {
+    'numToStr/Comment.nvim',
+    opts = {
+      -- add any options here
+    },
+  },
+  {
+    'mikavilpas/yazi.nvim',
+    version = '*', -- use the latest stable version
+    event = 'VeryLazy',
+    dependencies = {
+      { 'nvim-lua/plenary.nvim', lazy = true },
+    },
+    keys = {
+      -- 👇 in this section, choose your own keymappings!
+      {
+        '<leader>-',
+        mode = { 'n', 'v' },
+        '<cmd>Yazi<cr>',
+        desc = 'Open yazi at the current file',
+      },
+      {
+        -- Open in the current working directory
+        '<leader>cw',
+        '<cmd>Yazi cwd<cr>',
+        desc = "Open the file manager in nvim's working directory",
+      },
+      {
+        '<c-up>',
+        '<cmd>Yazi toggle<cr>',
+        desc = 'Resume the last yazi session',
+      },
+    },
+    ---@type YaziConfig | {}
+    opts = {
+      -- if you want to open yazi instead of netrw, see below for more info
+      open_for_directories = false,
+      keymaps = {
+        show_help = '<f1>',
+      },
+    },
+    -- 👇 if you use `open_for_directories=true`, this is recommended
+    init = function()
+      -- mark netrw as loaded so it's not loaded at all.
+      --
+      -- More details: https://github.com/mikavilpas/yazi.nvim/issues/802
+      vim.g.loaded_netrwPlugin = 1
+    end,
+  },
+  {
+    'sphamba/smear-cursor.nvim',
+    opts = {
+      stiffness = 0.5,
+      trailing_stiffness = 0.49,
+      -- distance_stop_animating = 0.5,
+      never_draw_over_target = false,
+    },
+  },
+  {
+    'karb94/neoscroll.nvim',
+    opts = {},
+  },
+  {
+    'monaqa/dial.nvim',
+    keys = {
+      {
+        '<C-a>',
+        function()
+          require('dial.map').manipulate('increment', 'normal')
+        end,
+        mode = 'n',
+        desc = 'Increment',
+      },
+      {
+        '<C-x>',
+        function()
+          require('dial.map').manipulate('decrement', 'normal')
+        end,
+        mode = 'n',
+        desc = 'Decrement',
+      },
+    },
+    config = function()
+      local augend = require 'dial.augend'
+      require('dial.config').augends:register_group {
+        default = {
+          augend.constant.alias.bool, -- true/false
+        },
+      }
+    end,
+  },
+  {
+    'kdheepak/lazygit.nvim',
+    lazy = true,
+    cmd = {
+      'LazyGit',
+      'LazyGitConfig',
+      'LazyGitCurrentFile',
+      'LazyGitFilter',
+      'LazyGitFilterCurrentFile',
+    },
+    -- optional for floating window border decoration
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+    },
+    -- setting the keybinding for LazyGit with 'keys' is recommended in
+    -- order to load the plugin when the command is run for the first time
+    keys = {
+      { '<leader>lg', '<cmd>LazyGitCurrentFile<cr>', desc = 'LazyGit' },
+    },
+  },
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
   -- require 'kickstart.plugins.debug',
-  -- require 'kickstart.plugins.indent_line',
+  require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
   -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
