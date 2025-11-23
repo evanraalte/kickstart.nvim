@@ -1096,6 +1096,27 @@ require('lazy').setup({
     end,
   },
   {
+    'mgierada/lazydocker.nvim',
+    dependencies = { 'akinsho/toggleterm.nvim' },
+    -- branch = 'copilot/enhance-floating-window-size',
+    commit = '20dcb48a11d40d5e35e63f9d0b2ed74266a9456f',
+    config = function()
+      require('lazydocker').setup {
+        border = 'single', -- valid options are "single" | "double" | "shadow" | "curved"
+      }
+    end,
+    event = 'BufRead',
+    keys = {
+      {
+        '<leader>ld',
+        function()
+          require('lazydocker').open()
+        end,
+        desc = 'Open Lazydocker floating window',
+      },
+    },
+  },
+  {
     'kdheepak/lazygit.nvim',
     lazy = true,
     cmd = {
