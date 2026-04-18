@@ -911,6 +911,7 @@ require('lazy').setup({
 
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
+    branch = 'master', -- 'main' is archived experimental API without configs.lua
     build = ':TSUpdate',
     main = 'nvim-treesitter.configs',
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
